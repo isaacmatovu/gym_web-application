@@ -1,4 +1,3 @@
-#gym_web-application
+# gym_web-application
 
-The ultimate gym training app built with react and tailwind css
-Grand@1999
+The ultimate gym training app built with react and tailwind css.
