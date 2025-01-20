@@ -1,10 +1,10 @@
-import React from "react";
 import SectionWrapper from "./SectionWrapper";
 import { SCHEMES, WORKOUTS } from "../utils/swoldier";
 import { useState } from "react";
+import Button from "./Button";
 
 function Header(props) {
-  const { index, title, description } = props;
+  const { index, title, description, update, updateWorkout } = props;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-center gap-2">
@@ -18,17 +18,42 @@ function Header(props) {
   );
 }
 
-export default function Generator() {
+export default function Generator(props) {
   const [showModal, setShowModal] = useState(false);
-  const [poison, setPoison] = useState("individual");
-  const [muscles, setMuscles] = useState([]);
-  const [goal, setGoal] = useState("strength_power");
+  const {
+    poison,
+    setPoison,
+    muscles,
+    setMuscles,
+    goal,
+    setGoal,
+    updateWorkout,
+  } = props;
 
   function toggleModal() {
     setShowModal(!showModal);
   }
+
+  function handleMuscleSelection(muscleGroup) {
+    if (poison === "individual") {
+      // For individual selection, toggle the muscle in the array
+      setMuscles((prev) => {
+        if (prev.includes(muscleGroup)) {
+          return prev.filter((m) => m !== muscleGroup);
+        } else {
+          return [...prev, muscleGroup];
+        }
+      });
+    } else {
+      // For other types (bro_split, etc), select the whole group
+      const selectedMuscles = WORKOUTS[poison][muscleGroup] || [];
+      setMuscles(selectedMuscles);
+    }
+  }
+
   return (
     <SectionWrapper
+      id={"generate"}
       header={"Generate your workout"}
       title={["It's", "Huge", "o'clock"]}
     >
@@ -74,21 +99,46 @@ export default function Generator() {
               ? WORKOUTS[poison]
               : Object.keys(WORKOUTS[poison])
             ).map((muscleGroup, muscleGroupIndex) => {
+              const isSelected =
+                poison === "individual"
+                  ? muscles.includes(muscleGroup)
+                  : JSON.stringify(muscles) ===
+                    JSON.stringify(WORKOUTS[poison][muscleGroup]);
               return (
-                <button key={muscleGroupIndex}>
-                  <p>{muscleGroup}</p>
+                <button
+                  key={muscleGroupIndex}
+                  onClick={() => handleMuscleSelection(muscleGroup)}
+                  className={`text-left p-2 hover:bg-slate-800 rounded ${
+                    isSelected ? "bg-slate-800 text-blue-400" : ""
+                  }`}
+                >
+                  <p className="capitalize">
+                    {muscleGroup.replaceAll("_", " ")}
+                  </p>
                 </button>
               );
             })}
           </div>
         )}
       </div>
+      {muscles.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {muscles.map((muscle, index) => (
+            <span
+              key={index}
+              className="bg-blue-600 text-sm px-2 py-1 rounded-full capitalize"
+            >
+              {muscle.replaceAll("_", " ")}
+            </span>
+          ))}
+        </div>
+      )}
       <Header
         index={"03"}
         title={"Become Juggernault"}
         description={"Select your ultimate objective"}
       />
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {Object.keys(SCHEMES).map((scheme, schemeIndex) => {
           return (
             <button
@@ -106,6 +156,7 @@ export default function Generator() {
           );
         })}
       </div>
+      <Button func={updateWorkout} text={"Formualate"}></Button>
     </SectionWrapper>
   );
 }
